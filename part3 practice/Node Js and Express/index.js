@@ -26,17 +26,23 @@ let notes = [
   }
 ]
 
-// const requestLogger = (request, response, next) => {
-//   console.log('Method:', request.method)
-//   console.log('Path:  ', request.path)
-//   console.log('Body:  ', request.body)
-//   console.log('---')
-//   next()
-// }
-
-// app.use(requestLogger)
-
 morgan.token('body', (req) => { return JSON.stringify(req.body) })
+
+app.put('/api/notes/:id', (request, response) => {
+  const id = request.params.id
+  const body = request.body
+  const note = notes.find(note => note.id == id)
+  if (!note) {
+    return response.status(404).json(error)
+  }
+  const updatedNote = {
+    ...note,
+    content: body.content,
+    important: body.important
+  }
+  notes = notes.map(note => note.id === id ? updatedNote : note)
+  response.json(updatedNote)
+})
 
 const generateId = () => {
   const maxId = notes.length > 0
@@ -54,9 +60,9 @@ app.post('/api/notes', (request, response) => {
   }
 
   const note = {
+    id: generateId(),
     content: body.content,
-    important: body.important || false,
-    id: generateId()
+    important: body.important || false
   }
 
   notes = notes.concat(note)

@@ -1,0 +1,8 @@
+# Ignore node_modules inside those subfolders
+/part2 practice/Forms/node_modules/
+/part3 practice/Node Js and Express/node_modules/
+
+/part0 practice
+/part1 practice
+/part2 practice/Rendering a collection, modules
+/.vscode
