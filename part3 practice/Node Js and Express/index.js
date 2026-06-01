@@ -29,11 +29,11 @@ let notes = [
 morgan.token('body', (req) => { return JSON.stringify(req.body) })
 
 app.put('/api/notes/:id', (request, response) => {
-  const id = request.params.id
+  const id = String(request.params.id)
   const body = request.body
   const note = notes.find(note => note.id == id)
   if (!note) {
-    return response.status(404).json(error)
+    return response.status(404).json({ error: 'note is missing' })
   }
   const updatedNote = {
     ...note,
