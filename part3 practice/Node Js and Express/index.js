@@ -1,13 +1,11 @@
 const express = require('express')
 var morgan = require('morgan')
-const cors = require('cors')
 
 const app = express()
 
 app.use(express.static('dist'))
 app.use(express.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
-app.use(cors())
 
 let notes = [
   {
