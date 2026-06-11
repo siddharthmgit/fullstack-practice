@@ -1,6 +1,7 @@
 # Ignore node_modules inside those subfolders
 /part2_practice/Forms/node_modules/
 /part3_practice/NodeJsAndExpress/node_modules/
+.env
 
 /part0_practice
 /part1_practice
