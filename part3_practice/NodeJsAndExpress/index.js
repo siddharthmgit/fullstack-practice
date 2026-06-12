@@ -78,13 +78,18 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/notes/:id', (request, response) => {
-  const id = request.params.id
-  const note = notes.find(note => note.id == id)
-  if (note) {
-    response.json(note)
-  } else {
-    response.status(404).end()
-  }
+  Note.findById(request.params.id)
+    .then(note => {
+      if (note) {
+        response.json(note)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => {
+      console.log(error)
+      response.status(400).send({ error: 'malformatted id' })
+    })
 })
 
 app.get('/api/notes', (request, response) => {
