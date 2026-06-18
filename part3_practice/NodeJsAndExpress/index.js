@@ -29,20 +29,22 @@ let notes = [
 
 morgan.token('body', (req) => { return JSON.stringify(req.body) })
 
-app.put('/api/notes/:id', (request, response) => {
-  const id = String(request.params.id)
-  const body = request.body
-  const note = notes.find(note => note.id == id)
-  if (!note) {
-    return response.status(404).json({ error: 'note is missing' })
-  }
-  const updatedNote = {
-    ...note,
-    content: body.content,
-    important: body.important
-  }
-  notes = notes.map(note => note.id === id ? updatedNote : note)
-  response.json(updatedNote)
+app.put('/api/notes/:id', (request, response, next) => {
+  const { content, important } = request.body
+
+  Note.findById(request.params.id)
+    .then(note => {
+      if (!note)
+        return response.status(404).end()
+
+      note.content = content
+      note.important = important
+
+      return note.save().then((updatedNote) => {
+        response.json(updatedNote)
+      })
+    })
+    .catch(error => next(error))
 })
 
 const generateId = () => {
@@ -60,22 +62,21 @@ app.post('/api/notes', (request, response) => {
     })
   }
 
-  const note = {
-    id: generateId(),
+  const note = new Note({
     content: body.content,
     important: body.important || false
-  }
+  })
 
-  notes = notes.concat(note)
-
-  response.json(note)
+  note.save().then(savedNote => {
+    response.json(savedNote)
+  })
 })
 
 app.get('/', (request, response) => {
   response.send('<h1>Hello World! how are you</h1>')
 })
 
-app.get('/api/notes/:id', (request, response) => {
+app.get('/api/notes/:id', (request, response, next) => {
   Note.findById(request.params.id)
     .then(note => {
       if (note) {
@@ -84,10 +85,7 @@ app.get('/api/notes/:id', (request, response) => {
         response.status(404).end()
       }
     })
-    .catch(error => {
-      console.log(error)
-      response.status(400).send({ error: 'malformatted id' })
-    })
+    .catch(error => next(error))
 })
 
 app.get('/api/notes', (request, response) => {
@@ -105,8 +103,17 @@ app.delete('/api/notes/:id', (request, response) => {
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
-
 app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  next(error)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
