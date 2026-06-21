@@ -54,14 +54,9 @@ const generateId = () => {
   return String(maxId + 1)
 }
 
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', (request, response, next) => {
   const body = request.body
-  if (!body.content) {
-    return response.status(400).json({
-      error: 'content missing'
-    })
-  }
-
+  console.log(body)
   const note = new Note({
     content: body.content,
     important: body.important || false
@@ -70,6 +65,7 @@ app.post('/api/notes', (request, response) => {
   note.save().then(savedNote => {
     response.json(savedNote)
   })
+    .catch(error => next(error))
 })
 
 app.get('/', (request, response) => {
@@ -96,8 +92,12 @@ app.get('/api/notes', (request, response) => {
 
 app.delete('/api/notes/:id', (request, response) => {
   const id = request.params.id
-  notes = notes.filter(note => note.id != id)
-  response.status(204).end()
+  Note.findByIdAndDelete(id).then(note => {
+    console.log(`this note ${note} has been deleted from server`)
+    response.status(204).end()
+  })
+  // notes = notes.filter(note => note.id != id)
+  // response.status(204).end()
 })
 
 const unknownEndpoint = (request, response) => {
@@ -110,6 +110,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
   }
   next(error)
 }
